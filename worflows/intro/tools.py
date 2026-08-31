@@ -83,7 +83,6 @@ class WeatherResponse(BaseModel):
     response: str = Field(
         description="A response to the user's question."
     )
-print(json.dumps(messages, indent=2))
 
 completion_2 = client.chat.completions.parse(
     model=deployment_name,
