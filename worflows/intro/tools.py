@@ -58,7 +58,7 @@ completion = client.chat.completions.create(
 )
 
 message = completion.choices[0].message
-messages.append(message)
+messages.append(message.model_dump())
 
 #print(completion.model_dump_json(indent=2))
 
@@ -81,8 +81,9 @@ class WeatherResponse(BaseModel):
         description="The current temperature in celsius for the given location."
     )
     response: str = Field(
-        description="A natural language response to the user's question."
+        description="A response to the user's question."
     )
+print(json.dumps(messages, indent=2))
 
 completion_2 = client.chat.completions.parse(
     model=deployment_name,
