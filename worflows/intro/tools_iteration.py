@@ -72,17 +72,19 @@ class WeatherResponse(BaseModel):
 max_iterations = 5
 
 for i in range(max_iterations):
-    completion = client.chat.completions.create(
+    completion = client.chat.completions.parse(
         model=deployment_name,
         messages=messages,
         tools=tools,
+        response_format=WeatherResponse,
     )
 
     message = completion.choices[0].message
     messages.append(message.model_dump())
 
     if not message.tool_calls:
-        # Model reasoned it has enough information -- exit the loop
+        # Model returned its final structured answer -- exit the loop
+        final_response = message.parsed
         break
 
     for tool_call in message.tool_calls:
@@ -95,15 +97,6 @@ for i in range(max_iterations):
 else:
     raise RuntimeError(f"Exceeded max_iterations={max_iterations} without a final answer")
 
-# Now that the model has everything it needs, ask for the final structured answer
-completion_2 = client.chat.completions.parse(
-    model=deployment_name,
-    messages=messages,
-    tools=tools,
-    response_format=WeatherResponse,
-)
-
-final_response = completion_2.choices[0].message.parsed
 print(final_response.temperature)
 print(final_response.response)
 
