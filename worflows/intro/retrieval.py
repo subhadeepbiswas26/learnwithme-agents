@@ -20,10 +20,7 @@ def search_kb(question: str):
     Load the whole knowledge base from the JSON file.
     (This is a mock function for demonstration purposes, we don't search)
     """
-    print(__file__)
-    print(os.getcwd())
-    kb_path = os.path.join(os.path.dirname(__file__), "kb.json")
-    with open(kb_path, "r") as f:
+    with open("kb.json", "r") as f:
         return json.load(f)
 
 
@@ -32,7 +29,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "search_kb",
-            "description": "Get the answer to the user's question from the knowledge base.",
+            "description": "Get the answer to the user's question from the knowledge base",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -50,16 +47,32 @@ system_prompt = "You are a helpful assistant that answers questions from the kno
 
 messages = [
     {"role": "system", "content": system_prompt},
-    {"role": "user", "content": "What is the return policy?"},
+    {"role": "user", "content": "What is the temperature in tokyo?"},
 ]
+
+
+OUT_OF_SCOPE_KEYWORDS = ["temperature", "weather", "forecast"]
+
+
+def is_out_of_scope(question: str) -> bool:
+    q = question.lower()
+    return any(keyword in q for keyword in OUT_OF_SCOPE_KEYWORDS)
 
 
 def call_function(name, args):
     if name == "search_kb":
+        # Enforce the "ignore temperature-related questions" rule in code, rather
+        # than relying on the model to honor it from the tool description alone.
+        if is_out_of_scope(args.get("question", "")):
+            return {"error": "This knowledge base does not cover temperature/weather questions."}
         return search_kb(**args)
+
+
 class KBResponse(BaseModel):
     answer: str = Field(description="The answer to the user's question.")
-    source: int = Field(description="The record id of the answer.")
+    source: int | None = Field(
+        default=None, description="The record id of the answer, or None if not found in the knowledge base."
+    )
 
 max_iterations = 5
 
@@ -72,7 +85,7 @@ for i in range(max_iterations):
     )
 
     message = completion.choices[0].message
-    messages.append(message.model_dump())
+    messages.append(message.model_dump(exclude={"parsed"}))
 
     if not message.tool_calls:
         # Model returned its final structured answer -- exit the loop

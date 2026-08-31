@@ -14,6 +14,11 @@
       "id": 3,
       "question": "What payment methods do you accept?",
       "answer": "We accept Visa, Mastercard, American Express, PayPal, and Apple Pay. All payments are processed securely through our encrypted payment system."
+    },
+    {
+      "id": 4,
+      "question": "What is the shipping cost?",
+      "answer": "Shipping costs vary by destination and order weight. Domestic orders over $50 ship free."
     }
   ]
 }
